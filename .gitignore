@@ -1,0 +1,6 @@
+data/
+*.npy
+*.h5
+*.pkl
+_pycache_/
+.vscode/

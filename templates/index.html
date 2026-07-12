@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Network Intrusion Detection System (NIDS)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="icon">🛡️</span>
+                <h1>Smart NIDS Dashboard</h1>
+            </div>
+            <p class="subtitle">Real-Time Machine Learning Intrusion & Threat Analysis</p>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Panel 1: Batch Upload & Quick Test -->
+            <section class="card glass" id="upload-panel">
+                <h2><span class="step-num">1</span> Traffic Ingestion</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('upload')">CSV Batch Upload</button>
+                    <button class="tab-btn" onclick="switchTab('dataset')">Dataset Inspector</button>
+                    <button class="tab-btn" onclick="switchTab('manual')">Manual Diagnostics</button>
+                </div>
+
+                <!-- Tab content: CSV Upload -->
+                <div id="upload-tab" class="tab-content active">
+                    <p class="info-txt">Upload a CSV log containing network traffic parameters (matching the NSL-KDD schema) to perform batch classification.</p>
+                    <form id="csv-upload-form" class="upload-area">
+                        <div class="upload-icon">📤</div>
+                        <p>Drag and drop your network traffic CSV file here, or <span class="highlight">browse files</span></p>
+                        <input type="file" id="csv-file" name="file" accept=".csv" required>
+                    </form>
+                    <button type="button" class="btn primary-btn" onclick="uploadCSV()">Analyze Batch CSV</button>
+                </div>
+
+                <!-- Tab content: Dataset Inspector -->
+                <div id="dataset-tab" class="tab-content">
+                    <p class="info-txt">Inspect preloaded connection records directly from the test dataset (`KDDTest+.txt`). Choose any index to view actual vs predicted labels.</p>
+                    <div class="form-group row-group">
+                        <label for="record-index">Record Row Index (0 to 22543):</label>
+                        <input type="number" id="record-index" value="20" min="0" max="22543">
+                    </div>
+                    <button type="button" class="btn primary-btn" onclick="inspectDatasetRecord()">Fetch & Analyze Row</button>
+                </div>
+
+                <!-- Tab content: Manual Diagnostics -->
+                <div id="manual-tab" class="tab-content">
+                    <p class="info-txt">Simulate connection activity parameters to inspect predictive diagnostic responses in real-time.</p>
+                    <form id="manual-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="duration">Duration (sec):</label>
+                                <input type="number" id="duration" name="duration" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="protocol_type">Protocol Type:</label>
+                                <select id="protocol_type" name="protocol_type">
+                                    <option value="tcp" selected>TCP</option>
+                                    <option value="udp">UDP</option>
+                                    <option value="icmp">ICMP</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="service">Service:</label>
+                                <select id="service" name="service">
+                                    <option value="http" selected>HTTP (Web)</option>
+                                    <option value="private">Private (Internal)</option>
+                                    <option value="ftp_data">FTP Data</option>
+                                    <option value="smtp">SMTP (Email)</option>
+                                    <option value="telnet">Telnet</option>
+                                    <option value="ldap">LDAP</option>
+                                    <option value="eco_i">Eco-i (Ping)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="flag">Connection Flag:</label>
+                                <select id="flag" name="flag">
+                                    <option value="SF" selected>SF (Normal Connection)</option>
+                                    <option value="S0">S0 (Connection attempt, no response)</option>
+                                    <option value="REJ">REJ (Connection rejected)</option>
+                                    <option value="RSTO">RSTO (Connection reset by origin)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="src_bytes">Source Bytes:</label>
+                                <input type="number" id="src_bytes" name="src_bytes" value="350">
+                            </div>
+                            <div class="form-group">
+                                <label for="dst_bytes">Destination Bytes:</label>
+                                <input type="number" id="dst_bytes" name="dst_bytes" value="3600">
+                            </div>
+                            <div class="form-group">
+                                <label for="logged_in">Logged In:</label>
+                                <select id="logged_in" name="logged_in">
+                                    <option value="1" selected>Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="count">Conn Count (last 2s):</label>
+                                <input type="number" id="count" name="count" value="4">
+                            </div>
+                        </div>
+                        <button type="button" class="btn primary-btn" onclick="submitManualDiagnostics()">Run Diagnostic Check</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Panel 2: Live Diagnostic Results -->
+            <section class="card glass" id="results-panel">
+                <h2><span class="step-num">2</span> Diagnostic Diagnostics</h2>
+                <div class="placeholder-msg" id="results-placeholder">
+                    <div class="scanner"></div>
+                    <p>Awaiting traffic input to perform analysis...</p>
+                </div>
+
+                <div id="results-content" class="results-layout hidden">
+                    <!-- Target Header Info -->
+                    <div id="meta-info" class="meta-card">
+                        <h3>Connection Summary</h3>
+                        <p id="meta-text">TCP traffic on port HTTP...</p>
+                    </div>
+
+                    <!-- Predictions Side-by-side -->
+                    <div class="models-grid">
+                        <!-- Random Forest -->
+                        <div class="model-res-card rf-card">
+                            <div class="card-badge">RANDOM FOREST</div>
+                            <div class="binary-res">
+                                <div class="val" id="rf-bin-val">-</div>
+                                <div class="lbl">Binary Status</div>
+                            </div>
+                            <div class="meter-container">
+                                <div class="meter-header">
+                                    <span>Malicious Probability:</span>
+                                    <span id="rf-bin-prob">0%</span>
+                                </div>
+                                <div class="meter-bar"><div class="meter-fill" id="rf-bin-fill"></div></div>
+                            </div>
+                            <div class="multi-res">
+                                <span>Multi-Class:</span>
+                                <strong id="rf-multi-val">-</strong>
+                            </div>
+                        </div>
+
+                        <!-- SVM -->
+                        <div class="model-res-card svm-card">
+                            <div class="card-badge">SVM</div>
+                            <div class="binary-res">
+                                <div class="val" id="svm-bin-val">-</div>
+                                <div class="lbl">Binary Status</div>
+                            </div>
+                            <div class="meter-container">
+                                <div class="meter-header">
+                                    <span>Malicious Probability:</span>
+                                    <span id="svm-bin-prob">0%</span>
+                                </div>
+                                <div class="meter-bar"><div class="meter-fill" id="svm-bin-fill"></div></div>
+                            </div>
+                            <div class="multi-res">
+                                <span>Multi-Class:</span>
+                                <strong id="svm-multi-val">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch CSV Results -->
+                <div id="batch-results-content" class="results-layout hidden">
+                    <h3>Batch CSV Diagnostic Log</h3>
+                    <div class="table-container">
+                        <table id="batch-table">
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    <th>Binary Predict</th>
+                                    <th>Class Predict</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section 3: Visual Analytics -->
+        <section class="card glass bottom-panel">
+            <h2><span class="step-num">3</span> Model Visual Analytics Gallery</h2>
+            <div class="gallery-tabs">
+                <button class="g-tab-btn active" onclick="switchGallery('confusion')">Confusion Matrices</button>
+                <button class="g-tab-btn" onclick="switchGallery('roc')">ROC Curve Comparison</button>
+                <button class="g-tab-btn" onclick="switchGallery('importance')">Feature Importance</button>
+                <button class="g-tab-btn" onclick="switchGallery('distribution')">Class Distribution</button>
+            </div>
+            
+            <div class="gallery-content">
+                <div class="gallery-slide active" id="slide-confusion">
+                    <div class="slide-grid">
+                        <div>
+                            <h4>Binary (Normal vs Anomaly)</h4>
+                            <img src="/static/plots/confusion_matrix_binary.png" alt="Binary Confusion Matrix" onerror="this.src='https://placehold.co/600x300/181b2a/ffffff?text=Image+Generating...'">
+                        </div>
+                        <div>
+                            <h4>Multi-Class (5 Categories)</h4>
+                            <img src="/static/plots/confusion_matrix_multi.png" alt="Multi-class Confusion Matrix" onerror="this.src='https://placehold.co/600x300/181b2a/ffffff?text=Image+Generating...'">
+                        </div>
+                    </div>
+                </div>
+                <div class="gallery-slide" id="slide-roc">
+                    <div class="single-slide">
+                        <img src="/static/plots/roc_curve_binary.png" alt="ROC Curve" class="center-img" onerror="this.src='https://placehold.co/600x300/181b2a/ffffff?text=Image+Generating...'">
+                    </div>
+                </div>
+                <div class="gallery-slide" id="slide-importance">
+                    <div class="single-slide">
+                        <img src="/static/plots/feature_importance.png" alt="Feature Importance" class="center-img" onerror="this.src='https://placehold.co/600x300/181b2a/ffffff?text=Image+Generating...'">
+                    </div>
+                </div>
+                <div class="gallery-slide" id="slide-distribution">
+                    <div class="single-slide">
+                        <img src="/static/plots/class_distribution.png" alt="Class Distribution" class="center-img" onerror="this.src='https://placehold.co/600x300/181b2a/ffffff?text=Image+Generating...'">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
