@@ -1,54 +1,65 @@
 # Smart Network Intrusion Detection System (NIDS)
 A Machine Learning-powered Network Intrusion Detection System (NIDS) trained on the **NSL-KDD** dataset. The system features preprocessing, evaluation analytics, a command-line interface (CLI) diagnostic tool, and an interactive dark-themed web dashboard.
 ---
-## 🚀 Features
+##  Features
 - **Binary Classification:** Classify connection traffic as `Normal` or `Anomaly` (threat).
 - **Multi-class Classification:** Categorize attacks into 5 distinct classes: `Normal`, `DoS` (Denial of Service), `Probe` (Port scanning/probing), `R2L` (Remote-to-Local unauthorized access), and `U2R` (User-to-Root privilege escalation).
 - **Dual Classifiers:** Employs both **Random Forest** (high accuracy) and **Support Vector Machine (SVM)** models.
 - **Diagnostics CLI:** Run immediate threat diagnostics on specific test set indexes or mock HTTP traffic.
 - **Glassmorphic Web Dashboard:** Interactive web user interface with batch CSV log uploading, live dataset inspector, and visual evaluation graph galleries.
 ---
+##  Screenshots
+ ## 📸 Dashboard Overview
+  ![Dashboard](screenshots/dashboard.png.jpeg)
 
-## 📁 Project Structure
-```text
-nids/
-│
-├── data/                       # Dataset storage
-│   ├── KDDTrain+.txt           # Raw train set (auto-downloaded)
-│   ├── KDDTest+.txt            # Raw test set (auto-downloaded)
-│   └── preprocessed/           # Preprocessed numpy arrays (.npy)
-│
-├── models/                     # Saved models & preprocessor state
-│   ├── preprocessors.joblib    # StandardScaler, OneHotEncoder, column maps
-│   ├── rf_binary.joblib        # Random Forest Binary Classifier
-│   ├── rf_multi.joblib         # Random Forest Multi-class Classifier
-│   ├── svm_binary.joblib       # SVM Binary Classifier
-│   └── svm_multi.joblib        # SVM Multi-class Classifier
-│
-├── plots/                      # Generated performance graphs
-│   ├── class_distribution.png
-│   ├── confusion_matrix_binary.png
-│   ├── confusion_matrix_multi.png
-│   ├── roc_curve_binary.png
-│   └── feature_importance.png
-│
-├── static/                     # Web app assets
-│   ├── style.css               # Glassmorphism visual layout stylesheet
-│   └── app.js                  # Frontend API caller & GUI manager
-│
-├── templates/
-│   └── index.html              # Dashboard dashboard index
-│
-├── requirements.txt            # Project dependencies
-├── utils.py                    # Dataset downloader utility
-├── preprocess.py               # Preprocessing & encoding pipeline
-├── train.py                    # Model training coordinator
-├── visualize.py                # Visual exporter and metric generator
-├── detect.py                   # CLI diagnostics utility
-└── app.py                      # Flask web server entrypoint
+- **Real-time Traffic Ingestion**
+  ![Traffic Ingestion](screenshots/traffic-ingestion.png)
+  
+- **Manual Diagnostics**
+  ![Manual Diagnostics](screenshots/manual-diagnostics.png)
 
-## ⚙️ Running the Pipeline Step-by-Step
-### Step 1: Download the Datasets
+- **Dataset Inspector**
+  ![Dataset Inspector](screenshots/dataset-inspector.png)
+
+- **Feature Analysis**
+  ![Feature](screenshots/feature.png)
+
+
+ ##  How It Works (ML Pipeline Flow)
+The system uses a fully local, step-by-step machine learning pipeline for network intrusion detection. The backend does all training and evaluation offline, meaning no data is sent to any external server.
+
+**Data Ingestion**: When you run `utils.py`, the client downloads the official NSL-KDD train and test datasets directly from the UNB repository. The raw `.txt` files are parsed and loaded into pandas DataFrames.
+
+**Preprocessing**: `preprocess.py` handles all feature engineering. It normalizes numerical features with MinMaxScaler, encodes categorical features like `protocol_type` and `service` with LabelEncoder, maps attack labels to `0=Normal, 1=Attack`, and saves the fitted scalers/encoders to disk for reuse.
+
+**Training**: `train.py` loads the processed data and trains 2 separate models:
+1. **Random Forest Classifier** - for overall intrusion detection
+2. **SVM Classifier** - for comparison and benchmarking
+Both models are saved as `.pkl` files after training with 5-fold cross-validation.
+
+**Evaluation & Visualization**: `visualize.py` evaluates the trained models on the test set. It prints classification reports, accuracy, precision, recall, F1-score, and exports visual analytics:
+- **Confusion Matrix**
+- **ROC Curve & AUC**
+- **Feature Importance Plot**
+
+**Output**: All results, metrics, and plots are saved to the `/outputs` folder. You can inspect them directly or use the `Dataset Inspector` and `Feature Analysis` modules to explore the data further.
+
+**Note**: All pipeline logs including data shapes, training time, accuracy scores, and feature stats print directly to the terminal so you can verify each step of the ML flow.
+
+##  Project Structure
+`utils.py`       - Downloads and parses NSL-KDD datasets  
+`preprocess.py`  - Normalizes features, encodes categories, saves scalers  
+`train.py`       - Trains Random Forest and SVM models  
+`visualize.py`   - Evaluates models and saves plots + metrics  
+`requirements.txt` - All Python dependencies  
+
+`datasets/`      - Raw NSL-KDD train/test files  
+`outputs/`       - Generated plots, reports, and results  
+`screenshots/`   - UI images for README
+
+##  Running the Pipeline Step-by-Step
+
+**Step 1: Download the Datasets**  
 Downloads the official NSL-KDD train and test datasets from the UNB repository:
 ```powershell
 python utils.py
@@ -68,8 +79,10 @@ Evaluates test accuracy, prints metric reports, and saves performance curves:
 ```powershell
 python visualize.py
 ```
----
-## 🖥️ Running the NIDS Interfaces
+
+
+
+##  Running the NIDS Interfaces
 ### 1. The Command-Line Interface (CLI)
 Diagnose live or saved traffic connection logs:
 - **Demonstration check (Standard HTTP):**
@@ -87,53 +100,12 @@ python app.py
 ```
 Open your browser and navigate to: **`http://127.0.0.1:5000/`**
 ---
-## 📊 Summary of Model Performance
+##  Summary of Model Performance
+
 ### Binary Status (Anomaly vs Normal)
-|
- Model 
-|
- Test Accuracy 
-|
- Precision (Anomaly) 
-|
- Recall (Anomaly) 
-|
- F1-Score (Anomaly) 
-|
-|
-:---
-|
-:---:
-|
-:---:
-|
-:---:
-|
-:---:
-|
-|
-**
-Random Forest
-**
-|
- 77.0% 
-|
- 97.0% 
-|
- 61.0% 
-|
- 75.0% 
-|
-|
-**
-SVM (stratified)
-**
-|
- 78.0% 
-|
- 97.0% 
-|
- 63.0% 
-|
- 76.0% 
-|
+
+| Model | Test Accuracy | Precision (Anomaly) | Recall (Anomaly) | F1-Score (Anomaly) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Random Forest** | 77.0% | 97.0% | 61.0% | 75.0% |
+| **SVM (stratified)** | 78.0% | 97.0% | 63.0% | 76.0% |
+
